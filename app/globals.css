@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-mist bg-grain text-ink antialiased;
+}
+
+a {
+  @apply text-spruce transition-colors hover:text-coral;
+}
+
+::selection {
+  @apply bg-saffron/30;
+}
