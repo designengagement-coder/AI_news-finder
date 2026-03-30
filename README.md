@@ -133,5 +133,5 @@ Recommended cadence: every 30 to 60 minutes.
 
 - The ingestion layer is wired to real internet sources, but depends on network availability at runtime.
 - Local development uses SQLite, so you do not need PostgreSQL installed to run the first version.
-- Product Hunt and some blogs may change feed formats; add or swap sources in [`/Users/ankushpanda/Documents/New project/lib/ingestion/sources.ts`](/Users/ankushpanda/Documents/New%20project/lib/ingestion/sources.ts) as needed.
+- Product Hunt and some blogs may change feed formats; add or swap sources in [`/Users/ankushpanda/.codex/worktrees/6c26/New project/lib/ingestion/sources.ts`](/Users/ankushpanda/.codex/worktrees/6c26/New project/lib/ingestion/sources.ts) as needed.
 - The seed is only for first-run usability; real ingestion is the intended source of truth.
