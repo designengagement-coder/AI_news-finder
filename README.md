@@ -122,6 +122,8 @@ curl -X POST http://localhost:3000/api/refresh \
 
 Recommended cadence: every 30 to 60 minutes.
 
+If `ENABLE_AUTO_REFRESH="true"`, the dashboard will also trigger a refresh on page load when the last successful ingestion is older than 30 minutes. This helps returning users see newer content without manually running the script, but scheduled refresh remains the more reliable production path.
+
 ## Search and filters
 
 - Keyword search on title and summary
@@ -133,5 +135,6 @@ Recommended cadence: every 30 to 60 minutes.
 
 - The ingestion layer is wired to real internet sources, but depends on network availability at runtime.
 - Local development uses SQLite, so you do not need PostgreSQL installed to run the first version.
+- If `OPENAI_API_KEY` is set, indirectly relevant AI news can be rewritten into product-design context during ingestion. Generic AI news without design relevance is filtered out.
 - Product Hunt and some blogs may change feed formats; add or swap sources in [`/Users/ankushpanda/.codex/worktrees/6c26/New project/lib/ingestion/sources.ts`](/Users/ankushpanda/.codex/worktrees/6c26/New project/lib/ingestion/sources.ts) as needed.
 - The seed is only for first-run usability; real ingestion is the intended source of truth.

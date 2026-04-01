@@ -1,6 +1,6 @@
 import { CONTENT_CATEGORIES, SOURCE_TYPES } from "@/lib/constants";
 import { relevantJobTerms, type JobSourceConfig } from "@/lib/ingestion/sources";
-import { extractStructuredSignals, summarize } from "@/lib/ingestion/normalize";
+import { extractStructuredSignals, htmlToText, summarize } from "@/lib/ingestion/normalize";
 import { IngestionRecord } from "@/lib/types";
 
 type GreenhouseBoardResponse = {
@@ -14,9 +14,55 @@ type GreenhouseBoardResponse = {
   }>;
 };
 
+const preferredTitleTerms = [
+  "product designer",
+  "ux designer",
+  "ui designer",
+  "ui/ux designer",
+  "ux/ui designer",
+  "design systems",
+  "design system",
+  "design lead",
+  "design leader",
+  "head of design",
+  "design director",
+  "staff product designer",
+  "principal product designer",
+  "product design manager",
+  "design manager",
+  "design researcher",
+  "ux researcher",
+  "user experience",
+  "service designer",
+  "conversation designer"
+];
+
+const excludedTitleTerms = [
+  "account executive",
+  "sales",
+  "revenue",
+  "customer success",
+  "solutions consultant",
+  "business development",
+  "marketing",
+  "finance",
+  "legal",
+  "recruiter"
+];
+
 function matchesRelevantRole(title: string, content: string) {
-  const haystack = `${title} ${content}`.toLowerCase();
-  return relevantJobTerms.some((term) => haystack.includes(term));
+  const normalizedTitle = title.toLowerCase();
+  const normalizedContent = content.toLowerCase();
+
+  if (excludedTitleTerms.some((term) => normalizedTitle.includes(term))) {
+    return false;
+  }
+
+  if (preferredTitleTerms.some((term) => normalizedTitle.includes(term))) {
+    return true;
+  }
+
+  return relevantJobTerms.some((term) => normalizedTitle.includes(term) || normalizedContent.includes(term));
 }
 
 function parseWorkplaceType(text: string) {
@@ -50,7 +96,7 @@ export async function fetchGreenhouseBoard(config: JobSourceConfig): Promise<Ing
     .filter((job) => matchesRelevantRole(job.title, job.content ?? ""))
     .slice(0, 20)
     .map((job) => {
-      const text = summarize((job.content ?? "").replace(/<[^>]+>/g, " "));
+      const text = summarize(htmlToText(job.content ?? ""));
       const structured = extractStructuredSignals(job.title, text);
       const metadataText = (job.metadata ?? []).map((entry) => `${entry.name}: ${entry.value}`).join(" | ");
 

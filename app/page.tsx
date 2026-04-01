@@ -1,17 +1,15 @@
 import type { ReactNode } from "react";
-import { DismissibleToolBanner } from "@/components/DismissibleToolBanner";
 import { EmptyStateCard } from "@/components/EmptyStateCard";
-import { getDashboardData, getInsights } from "@/lib/analytics";
+import { getDashboardData } from "@/lib/analytics";
 import { HighlightTicker } from "@/components/HighlightTicker";
 import { JobInsightCard } from "@/components/JobInsightCard";
-import { MarketSignalPanel } from "@/components/MarketSignalPanel";
 import { NewsCard } from "@/components/NewsCard";
 import { RefreshStatusBar } from "@/components/RefreshStatusBar";
 import { SectionCarousel } from "@/components/SectionCarousel";
 import { ToolCard } from "@/components/ToolCard";
 import { TopBarFilters } from "@/components/TopBarFilters";
-import { UpskillingPanel } from "@/components/UpskillingPanel";
 import { WorkflowCard } from "@/components/WorkflowCard";
+import { maybeAutoRefresh } from "@/lib/ingestion/auto-refresh";
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -37,6 +35,8 @@ function renderCollection<T>(
 }
 
 export default async function Home({ searchParams }: PageProps) {
+  await maybeAutoRefresh();
+
   const params = await searchParams;
   const filters = {
     q: single(params.q),
@@ -46,7 +46,7 @@ export default async function Home({ searchParams }: PageProps) {
     sort: (single(params.sort) as "latest" | "trending" | "relevance" | undefined) ?? "latest"
   };
 
-  const [dashboard, insights] = await Promise.all([getDashboardData(filters), getInsights()]);
+  const dashboard = await getDashboardData(filters);
 
   return (
     <main className="min-h-screen px-4 py-6 md:px-8">
@@ -80,20 +80,15 @@ export default async function Home({ searchParams }: PageProps) {
           <RefreshStatusBar {...dashboard.refreshStatus} />
         </div>
 
-        <div className="mt-6">
-          <DismissibleToolBanner item={dashboard.heroTool as any} />
-        </div>
-
         <SectionCarousel
           eyebrow="Priority News"
-          title="AI product design and job signals first"
-          description="This section is now weighted toward design-role change, hiring demand, and practical product-team impact before broader AI updates."
-          viewMoreHref="/?category=JOB"
+          title="AI product and design signals first"
+          description="The top of the feed stays focused on high-value design impact and workflow implications before broader categories."
+          viewMoreHref="/?category=DESIGN_IMPACT"
         >
           {renderCollection(
             dashboard.priorityNews as any[],
-            (item: any) =>
-              item.category === "JOB" ? <JobInsightCard key={item.id} item={item} /> : <NewsCard key={item.id} item={item} />,
+            (item: any) => <NewsCard key={item.id} item={item} />,
             "No priority design signals yet",
             "Run the refresh job to pull in product-design focused AI updates."
           )}
@@ -142,9 +137,9 @@ export default async function Home({ searchParams }: PageProps) {
         </SectionCarousel>
 
         <SectionCarousel
-          eyebrow="Market Demand"
+          eyebrow="Signals to Watch"
           title="Cross-signal patterns worth watching"
-          description="A narrower view across jobs, workflows, and design commentary that points to where expectations are consolidating."
+          description="A narrower view across design commentary and workflow shifts that points to where expectations are consolidating."
           viewMoreHref="/?sort=relevance"
         >
           {renderCollection(
@@ -155,13 +150,33 @@ export default async function Home({ searchParams }: PageProps) {
           )}
         </SectionCarousel>
 
-        <div className="mt-10">
-          <MarketSignalPanel items={dashboard.marketSignals as any} />
-        </div>
+        <SectionCarousel
+          eyebrow="New AI Tools"
+          title="Recently launched tools to evaluate"
+          description="A dedicated stream of newly launched or newly surfaced AI tools that may be worth testing in product design workflows."
+          viewMoreHref="/?category=TOOL&sort=latest"
+        >
+          {renderCollection(
+            ((dashboard.launchedTools as any[])?.length ? dashboard.launchedTools : dashboard.tools) as any[],
+            (item: any) => <ToolCard key={item.id} item={item} />,
+            "No newly launched tools yet",
+            "Newly launched AI tools will appear here after the next successful refresh."
+          )}
+        </SectionCarousel>
 
-        <div className="mt-10">
-          <UpskillingPanel {...insights} />
-        </div>
+        <SectionCarousel
+          eyebrow="AI Jobs"
+          title="Design roles in the AI market"
+          description="This section is kept lower for now while the job pipeline is still being tightened toward more relevant product and design roles."
+          viewMoreHref="/?category=JOB"
+        >
+          {renderCollection(
+            dashboard.jobs as any[],
+            (item: any) => <JobInsightCard key={item.id} item={item} />,
+            "No design-focused AI jobs yet",
+            "Relevant product and design roles will appear here as the job source parsers improve."
+          )}
+        </SectionCarousel>
       </div>
     </main>
   );

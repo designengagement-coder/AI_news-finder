@@ -20,6 +20,45 @@ const designKeywords = [
   "interaction"
 ];
 
+function countryPriority(region?: string | null) {
+  const normalized = (region ?? "").toLowerCase();
+
+  if (normalized.includes("india")) {
+    return 38;
+  }
+
+  if (
+    normalized.includes("united states") ||
+    normalized.includes("usa") ||
+    normalized.includes("us") ||
+    normalized.includes("san francisco") ||
+    normalized.includes("new york")
+  ) {
+    return 42;
+  }
+
+  return region ? 8 : 0;
+}
+
+function designerUseCase(summary: string, tags: string[]) {
+  const corpus = `${summary} ${tags.join(" ")}`.toLowerCase();
+
+  if (corpus.includes("research")) {
+    return "Useful for research synthesis and insight clustering.";
+  }
+  if (corpus.includes("prototype") || corpus.includes("build")) {
+    return "Useful for quick prototyping and concept exploration.";
+  }
+  if (corpus.includes("writing") || corpus.includes("copy")) {
+    return "Useful for UX writing and interface content iteration.";
+  }
+  if (corpus.includes("system") || corpus.includes("design-systems")) {
+    return "Useful for design-system documentation and component thinking.";
+  }
+
+  return "Useful for faster ideation, iteration, and design workflow support.";
+}
+
 function buildWhere(filters: FilterState): Prisma.ContentItemWhereInput {
   const from = timeframeStart(filters.timeframe);
   return {
@@ -48,20 +87,37 @@ function orderBy(sort?: FilterState["sort"]): Prisma.ContentItemOrderByWithRelat
   }
 }
 
+function andWhere(
+  ...clauses: Array<Prisma.ContentItemWhereInput | undefined>
+): Prisma.ContentItemWhereInput {
+  const filtered = clauses.filter(
+    (clause): clause is Prisma.ContentItemWhereInput => Boolean(clause && Object.keys(clause).length > 0)
+  );
+
+  if (filtered.length === 0) {
+    return {};
+  }
+
+  if (filtered.length === 1) {
+    return filtered[0];
+  }
+
+  return { AND: filtered };
+}
+
 export async function getDashboardData(filters: FilterState = {}) {
   const where = buildWhere(filters);
   const [focusedPool, toolsRaw, workflowsRaw, jobsRaw, designImpactRaw, marketSignalsRaw, sourceCount, itemCount, lastItem] =
     await Promise.all([
       prisma.contentItem.findMany({
-        where: {
-          ...where,
+        where: andWhere(where, {
           OR: [
             { category: CONTENT_CATEGORIES.JOB },
             { category: CONTENT_CATEGORIES.TOOL },
             { category: CONTENT_CATEGORIES.WORKFLOW },
             { category: CONTENT_CATEGORIES.DESIGN_IMPACT }
           ]
-        },
+        }),
         orderBy: orderBy(filters.sort),
         take: 80
       }),
@@ -86,14 +142,13 @@ export async function getDashboardData(filters: FilterState = {}) {
         take: 20
       }),
       prisma.contentItem.findMany({
-        where: {
-          ...where,
+        where: andWhere(where, {
           OR: [
             { category: CONTENT_CATEGORIES.JOB },
             { category: CONTENT_CATEGORIES.DESIGN_IMPACT },
             { category: CONTENT_CATEGORIES.WORKFLOW }
           ]
-        },
+        }),
         orderBy: [{ relevanceScore: "desc" }, { trendScore: "desc" }],
         take: 20
       }),
@@ -108,7 +163,9 @@ export async function getDashboardData(filters: FilterState = {}) {
     extractedSkills: asStringArray(item.extractedSkills),
     extractedTools: asStringArray(item.extractedTools),
     extractedCompanies: asStringArray(item.extractedCompanies),
-    metadata: asRecord(item.metadata)
+    metadata: asRecord(item.metadata),
+    toolLogoUrl: asRecord(item.metadata)?.imageUrl as string | undefined,
+    designerUseCase: designerUseCase(item.summary, asStringArray(item.tags))
   });
 
   const isDesignFocused = (item: ReturnType<typeof normalizeItem>) => {
@@ -142,7 +199,7 @@ export async function getDashboardData(filters: FilterState = {}) {
       0
     );
 
-    return categoryWeight + item.trendScore + item.relevanceScore + keywordLift;
+    return categoryWeight + item.trendScore + item.relevanceScore + keywordLift + countryPriority(item.region);
   };
 
   const focusedItems = focusedPool.map(normalizeItem).filter(isDesignFocused).sort((a, b) => rankPriority(b) - rankPriority(a));
@@ -160,6 +217,19 @@ export async function getDashboardData(filters: FilterState = {}) {
     .sort((a, b) => rankPriority(b) - rankPriority(a))
     .slice(0, 10);
 
+  const launchedTools = tools
+    .filter((item) => {
+      const corpus = `${item.title} ${item.summary} ${item.tags.join(" ")}`.toLowerCase();
+      return (
+        corpus.includes("launch") ||
+        corpus.includes("new") ||
+        corpus.includes("product hunt") ||
+        corpus.includes("release") ||
+        corpus.includes("announce")
+      );
+    })
+    .slice(0, 10);
+
   const headlineSource = priorityNews[0] ?? tools[0] ?? workflows[0] ?? focusedItems[0] ?? null;
   const headlineTicker = headlineSource
     ? headlineSource.title
@@ -173,10 +243,11 @@ export async function getDashboardData(filters: FilterState = {}) {
   return {
     priorityNews,
     tools: tools.slice(0, 10),
+    launchedTools,
+    jobs: jobs.slice(0, 10),
     workflows: workflows.slice(0, 10),
     designImpact: designImpact.slice(0, 10),
     marketSignals: marketSignals.slice(0, 8),
-    heroTool: tools[0] ?? null,
     headlineTicker,
     refreshStatus: {
       lastUpdated: lastItem?.fetchedAt.toISOString() ?? null,

@@ -164,6 +164,15 @@ export async function ingestAllSources() {
   }
 
   for (const source of jobSources) {
+    if (source.type !== "greenhouse") {
+      results.push({
+        source: `${source.company} Careers`,
+        ok: false,
+        error: `Configured as watch source only. Dedicated parser still needed for ${source.boardUrl}`
+      });
+      continue;
+    }
+
     try {
       const result = await runSourceIngestion(`${source.company} Careers`, () => fetchGreenhouseBoard(source));
       results.push({ source: `${source.company} Careers`, ok: true, ...result });

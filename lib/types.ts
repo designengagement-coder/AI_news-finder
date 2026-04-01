@@ -34,10 +34,11 @@ export type FilterState = {
 export type DashboardPayload = {
   priorityNews: unknown[];
   tools: unknown[];
+  launchedTools: unknown[];
+  jobs: unknown[];
   workflows: unknown[];
   designImpact: unknown[];
   marketSignals: unknown[];
-  heroTool: unknown | null;
   headlineTicker: string;
   refreshStatus: {
     lastUpdated: string | null;

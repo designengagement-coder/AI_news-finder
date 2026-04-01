@@ -8,6 +8,13 @@ import {
   inferTags,
   summarize
 } from "@/lib/ingestion/normalize";
+import {
+  editorialReviewForDesign,
+  isDirectDesignSignal,
+  isGenericNoise,
+  rewriteForDesignContext,
+  shouldRewriteIndirectSignal
+} from "@/lib/ingestion/rewrite";
 import { IngestionRecord } from "@/lib/types";
 
 const parser = new Parser({
@@ -32,18 +39,65 @@ function scoreRecord(category: ContentCategory, title: string, publishedAt?: Dat
 
 export async function fetchRssSource(config: RssSourceConfig): Promise<IngestionRecord[]> {
   const feed = await parser.parseURL(config.feedUrl);
+  const items = (feed.items ?? []).slice(0, 25).filter((item) => item.link && item.title);
 
-  return (feed.items ?? [])
-    .slice(0, 25)
-    .filter((item) => item.link && item.title)
-    .map((item) => {
+  const records: Array<IngestionRecord | null> = await Promise.all(
+    items.map(async (item) => {
       const rawSummary = htmlToText(item.contentSnippet ?? item.content ?? item.summary ?? "");
       const title = item.title!.trim();
-      const summary = summarize(rawSummary || title);
+      let summary = summarize(rawSummary || title);
       const publishedAt = item.isoDate ? new Date(item.isoDate) : item.pubDate ? new Date(item.pubDate) : undefined;
       const category = deriveCategory(title, summary, config.category);
+      let tags = inferTags(title, summary, config.tags);
+
+      if (isGenericNoise(title, summary, tags)) {
+        return null;
+      }
+
+      const editorialReview = await editorialReviewForDesign({
+        title,
+        summary,
+        sourceName: config.name,
+        category,
+        tags
+      });
+
+      if (editorialReview) {
+        if (!editorialReview.keep) {
+          return null;
+        }
+
+        summary = summarize(editorialReview.rewrittenSummary);
+        tags = inferTags(title, `${summary} ${editorialReview.rationale}`, [...config.tags, ...editorialReview.rewrittenTags]);
+      }
+
+      if (shouldRewriteIndirectSignal(title, summary, category, tags)) {
+        const rewritten = await rewriteForDesignContext({
+          title,
+          summary,
+          sourceName: config.name,
+          category,
+          tags
+        });
+
+        if (rewritten) {
+          summary = summarize(rewritten.rewrittenSummary);
+          tags = inferTags(title, `${summary} ${rewritten.rationale}`, [...config.tags, ...rewritten.rewrittenTags]);
+        }
+      }
+
+      if (!isDirectDesignSignal(title, summary, category, tags) && !editorialReview?.isDirectDesignSignal) {
+        return null;
+      }
+
       const structured = extractStructuredSignals(title, summary);
       const scores = scoreRecord(category, title, publishedAt);
+      const mediaCandidate =
+        item.enclosure?.url ??
+        (Array.isArray((item as { mediaContent?: Array<{ url?: string; $?: { url?: string } }> }).mediaContent)
+          ? (item as { mediaContent?: Array<{ url?: string; $?: { url?: string } }> }).mediaContent?.[0]?.url ??
+            (item as { mediaContent?: Array<{ url?: string; $?: { url?: string } }> }).mediaContent?.[0]?.$?.url
+          : undefined);
 
       return {
         externalId: item.guid ?? item.link!,
@@ -57,7 +111,8 @@ export async function fetchRssSource(config: RssSourceConfig): Promise<Ingestion
         publishedAt,
         category,
         subcategory: config.subcategory,
-        tags: inferTags(title, summary, config.tags),
+        tags,
+        region: config.region,
         contentType: "article",
         extractedSkills: structured.skills,
         extractedTools: structured.tools,
@@ -65,8 +120,12 @@ export async function fetchRssSource(config: RssSourceConfig): Promise<Ingestion
         relevanceScore: scores.relevanceScore,
         trendScore: scores.trendScore,
         metadata: {
-          creator: item.creator ?? null
+          creator: item.creator ?? null,
+          imageUrl: mediaCandidate ?? null
         }
       };
-    });
+    })
+  );
+
+  return records.filter((record): record is IngestionRecord => record !== null);
 }
