@@ -6,7 +6,7 @@ Production-oriented intelligence platform for design teams that need current AI 
 
 - Next.js App Router + TypeScript
 - Tailwind CSS
-- Prisma + SQLite for zero-setup local development
+- Prisma + Supabase Postgres for deployment-safe persistence
 - Real-source ingestion from RSS feeds and Greenhouse job boards
 - Scheduled refresh entrypoint via protected API route or CLI script
 
@@ -76,26 +76,33 @@ npm install
 cp .env.example .env
 ```
 
-3. Generate Prisma client and create schema:
+3. Set your database env vars in `.env`:
+
+```bash
+DATABASE_URL="postgres://postgres.<project-ref>:<password>@aws-<region>.pooler.supabase.com:6543/postgres?sslmode=require&pgbouncer=true"
+DIRECT_URL="postgres://postgres.<project-ref>:<password>@aws-<region>.pooler.supabase.com:5432/postgres?sslmode=require"
+```
+
+4. Generate Prisma client and create schema:
 
 ```bash
 npx prisma generate
 npx prisma db push
 ```
 
-4. Optional bootstrap seed:
+5. Optional bootstrap seed:
 
 ```bash
 npm run db:seed
 ```
 
-5. Run the ingestion job once to fetch real data:
+6. Run the ingestion job once to fetch real data:
 
 ```bash
 npm run refresh
 ```
 
-6. Start the app:
+7. Start the app:
 
 ```bash
 npm run dev
@@ -122,7 +129,7 @@ curl -X POST http://localhost:3000/api/refresh \
 
 Recommended cadence: every 30 to 60 minutes.
 
-If `ENABLE_AUTO_REFRESH="true"`, the dashboard will also trigger a refresh on page load when the last successful ingestion is older than 30 minutes. This helps returning users see newer content without manually running the script, but scheduled refresh remains the more reliable production path.
+If `ENABLE_AUTO_REFRESH="true"`, the dashboard will also trigger a refresh on page load when the last successful ingestion is older than 30 minutes. For Vercel production, keep this off and use scheduled refresh against the API route or a cron job.
 
 ## Search and filters
 
@@ -134,7 +141,8 @@ If `ENABLE_AUTO_REFRESH="true"`, the dashboard will also trigger a refresh on pa
 ## Notes
 
 - The ingestion layer is wired to real internet sources, but depends on network availability at runtime.
-- Local development uses SQLite, so you do not need PostgreSQL installed to run the first version.
+- The deployed app should use Supabase Postgres or another persistent hosted Postgres database.
+- Use `DATABASE_URL` for the pooled Prisma connection and `DIRECT_URL` for the non-pooled direct connection.
 - If `OPENAI_API_KEY` is set, indirectly relevant AI news can be rewritten into product-design context during ingestion. Generic AI news without design relevance is filtered out.
 - Product Hunt and some blogs may change feed formats; add or swap sources in [`/Users/ankushpanda/.codex/worktrees/6c26/New project/lib/ingestion/sources.ts`](/Users/ankushpanda/.codex/worktrees/6c26/New project/lib/ingestion/sources.ts) as needed.
 - The seed is only for first-run usability; real ingestion is the intended source of truth.
