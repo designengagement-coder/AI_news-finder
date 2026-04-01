@@ -10,6 +10,7 @@ import { ToolCard } from "@/components/ToolCard";
 import { TopBarFilters } from "@/components/TopBarFilters";
 import { WorkflowCard } from "@/components/WorkflowCard";
 import { maybeAutoRefresh } from "@/lib/ingestion/auto-refresh";
+import { EMPTY_DASHBOARD_PAYLOAD } from "@/lib/types";
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -46,7 +47,7 @@ export default async function Home({ searchParams }: PageProps) {
     sort: (single(params.sort) as "latest" | "trending" | "relevance" | undefined) ?? "latest"
   };
 
-  const dashboard = await getDashboardData(filters);
+  const dashboard = await getDashboardData(filters).catch(() => EMPTY_DASHBOARD_PAYLOAD);
 
   return (
     <main className="min-h-screen px-4 py-6 md:px-8">

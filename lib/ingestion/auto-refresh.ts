@@ -9,6 +9,11 @@ export async function maybeAutoRefresh() {
     return;
   }
 
+  // Vercel serverless/runtime environments are not a safe place for SQLite-backed refresh jobs.
+  if (process.env.VERCEL === "1" || process.env.NODE_ENV === "production") {
+    return;
+  }
+
   const cutoff = subMinutes(new Date(), 30);
   const [runningRun, lastFinishedRun] = await Promise.all([
     prisma.ingestionRun.findFirst({

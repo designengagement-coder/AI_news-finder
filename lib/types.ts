@@ -46,3 +46,19 @@ export type DashboardPayload = {
     itemCount: number;
   };
 };
+
+export const EMPTY_DASHBOARD_PAYLOAD: DashboardPayload = {
+  priorityNews: [],
+  tools: [],
+  launchedTools: [],
+  jobs: [],
+  workflows: [],
+  designImpact: [],
+  marketSignals: [],
+  headlineTicker: "Feed is waiting for refresh",
+  refreshStatus: {
+    lastUpdated: null,
+    sourceCount: 0,
+    itemCount: 0
+  }
+};
