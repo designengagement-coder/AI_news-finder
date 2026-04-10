@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { EmptyStateCard } from "@/components/EmptyStateCard";
 import { getDashboardData } from "@/lib/analytics";
-import { HighlightTicker } from "@/components/HighlightTicker";
 import { JobInsightCard } from "@/components/JobInsightCard";
 import { NewsCard } from "@/components/NewsCard";
 import { RefreshStatusBar } from "@/components/RefreshStatusBar";
@@ -50,19 +49,14 @@ export default async function Home({ searchParams }: PageProps) {
   const dashboard = await getDashboardData(filters).catch(() => EMPTY_DASHBOARD_PAYLOAD);
 
   return (
-    <main className="min-h-screen px-4 py-6 md:px-8">
-      <div className="mx-auto max-w-7xl">
-        <section className="rounded-[30px] border border-black/8 bg-white/78 px-5 py-5 shadow-panel md:px-6">
-          <div className="flex flex-col gap-5">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate">
-                  AI trends, jobs, and design intelligence
-                </p>
-                <h1 className="mt-2 max-w-4xl text-3xl font-semibold leading-tight text-ink md:text-5xl">
-                  Product-design AI signals, without the generic market noise
-                </h1>
-              </div>
+    <main className="min-h-screen px-5 py-6 md:px-10 lg:px-20">
+      <div className="mx-auto w-full max-w-[1440px]">
+        <section className="pb-3">
+          <div className="flex min-h-16 flex-col gap-3 rounded-xl bg-surface px-4 py-3 shadow-panel md:flex-row md:items-center md:justify-between md:gap-4 md:px-5 md:py-0">
+            <div className="shrink-0">
+              <h1 className="font-serif text-[1.45rem] leading-none tracking-[-0.03em] text-ink md:text-[1.6rem]">
+                Signal Desk
+              </h1>
             </div>
             <TopBarFilters
               defaultQuery={filters.q}
@@ -74,17 +68,12 @@ export default async function Home({ searchParams }: PageProps) {
         </section>
 
         <div className="mt-4">
-          <HighlightTicker text={dashboard.headlineTicker} />
-        </div>
-
-        <div className="mt-4">
           <RefreshStatusBar {...dashboard.refreshStatus} />
         </div>
 
         <SectionCarousel
           eyebrow="Priority News"
           title="AI product and design signals first"
-          description="The top of the feed stays focused on high-value design impact and workflow implications before broader categories."
           viewMoreHref="/?category=DESIGN_IMPACT"
         >
           {renderCollection(
@@ -98,7 +87,6 @@ export default async function Home({ searchParams }: PageProps) {
         <SectionCarousel
           eyebrow="AI Tools"
           title="Tools that matter to product teams"
-          description="New launches and tool signals with clear design and workflow relevance."
           viewMoreHref="/?category=TOOL"
         >
           {renderCollection(
@@ -112,7 +100,6 @@ export default async function Home({ searchParams }: PageProps) {
         <SectionCarousel
           eyebrow="AI Workflows"
           title="Adoption patterns teams can practice"
-          description="Workflow examples focused on research, prototyping, synthesis, operations, and delivery."
           viewMoreHref="/?category=WORKFLOW"
         >
           {renderCollection(
@@ -126,7 +113,6 @@ export default async function Home({ searchParams }: PageProps) {
         <SectionCarousel
           eyebrow="Design Impact"
           title="How AI is changing product design roles"
-          description="Signals around expectations, responsibilities, and the emerging AI-native design toolkit."
           viewMoreHref="/?category=DESIGN_IMPACT"
         >
           {renderCollection(
@@ -140,7 +126,6 @@ export default async function Home({ searchParams }: PageProps) {
         <SectionCarousel
           eyebrow="Signals to Watch"
           title="Cross-signal patterns worth watching"
-          description="A narrower view across design commentary and workflow shifts that points to where expectations are consolidating."
           viewMoreHref="/?sort=relevance"
         >
           {renderCollection(
@@ -154,7 +139,6 @@ export default async function Home({ searchParams }: PageProps) {
         <SectionCarousel
           eyebrow="New AI Tools"
           title="Recently launched tools to evaluate"
-          description="A dedicated stream of newly launched or newly surfaced AI tools that may be worth testing in product design workflows."
           viewMoreHref="/?category=TOOL&sort=latest"
         >
           {renderCollection(
@@ -168,7 +152,6 @@ export default async function Home({ searchParams }: PageProps) {
         <SectionCarousel
           eyebrow="AI Jobs"
           title="Design roles in the AI market"
-          description="This section is kept lower for now while the job pipeline is still being tightened toward more relevant product and design roles."
           viewMoreHref="/?category=JOB"
         >
           {renderCollection(

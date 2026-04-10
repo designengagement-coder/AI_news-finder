@@ -1,6 +1,6 @@
 import * as cheerio from "cheerio";
 import { CONTENT_CATEGORIES, type ContentCategory } from "@/lib/constants";
-import { normalizeToken, truncate, unique } from "@/lib/utils";
+import { cleanDisplayText, normalizeToken, truncate, unique } from "@/lib/utils";
 
 const skillLexicon = [
   "prompt design",
@@ -41,11 +41,11 @@ export function htmlToText(input?: string) {
   }
 
   const $ = cheerio.load(input);
-  return $.text().replace(/\s+/g, " ").trim();
+  return cleanDisplayText($.text());
 }
 
 export function summarize(input: string, max = 220) {
-  const clean = input.replace(/\s+/g, " ").trim();
+  const clean = cleanDisplayText(input);
   return truncate(clean, max);
 }
 

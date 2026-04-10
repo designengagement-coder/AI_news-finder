@@ -21,6 +21,23 @@ export function truncate(text: string, max = 180) {
   return `${text.slice(0, max - 1).trimEnd()}…`;
 }
 
+export function cleanDisplayText(text?: string | null) {
+  if (!text) {
+    return "";
+  }
+
+  return text
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function timeframeStart(timeframe?: string) {
   switch (timeframe) {
     case "24h":

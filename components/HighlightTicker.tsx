@@ -4,8 +4,8 @@ type HighlightTickerProps = {
 
 export function HighlightTicker({ text }: HighlightTickerProps) {
   return (
-    <div className="rounded-2xl border border-[#d6ddd3] bg-[#f1f4ee] px-4 py-3 text-sm text-ink shadow-sm">
-      <span className="mr-3 rounded-full bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate">
+    <div className="flex min-h-10 items-center rounded-md bg-breaking px-4 py-2 text-sm text-white">
+      <span className="mr-3 text-[12px] font-semibold uppercase tracking-[0.08em] text-white/90">
         Day signal
       </span>
       <span className="font-medium">{text}</span>

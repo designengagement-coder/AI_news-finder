@@ -5,8 +5,8 @@ type SourceBadgeProps = {
 
 export function SourceBadge({ source, label }: SourceBadgeProps) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full bg-white/75 px-3 py-1 text-xs font-medium text-slate shadow-sm ring-1 ring-black/5">
-      <span className="h-2 w-2 rounded-full bg-saffron" />
+    <span className="inline-flex items-center gap-2 rounded bg-accent-light px-2.5 py-1 text-[12px] font-semibold uppercase tracking-[0.04em] text-accent-dark">
+      <span className="h-2 w-2 rounded-full bg-accent" />
       {label ? `${label}: ` : ""}
       {source}
     </span>

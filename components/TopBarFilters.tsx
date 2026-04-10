@@ -33,19 +33,19 @@ export function TopBarFilters({
   defaultQuery
 }: TopBarFiltersProps) {
   return (
-    <form className="rounded-[24px] border border-black/8 bg-white/92 p-3 shadow-panel">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+    <form className="w-full md:w-auto">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
         <input
           name="q"
           defaultValue={defaultQuery}
           placeholder="Search product design AI signals"
-          className="min-w-0 flex-1 rounded-2xl border border-black/8 bg-[#f7f8f4] px-4 py-3 text-sm text-ink outline-none placeholder:text-slate"
+          className="min-w-0 rounded-full border border-border bg-white px-4 py-3 text-sm text-ink outline-none placeholder:text-muted focus:border-border-strong md:w-[320px] md:flex-none md:py-2.5"
         />
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:flex lg:w-auto">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:flex md:w-auto">
           <select
             name="category"
             defaultValue={selectedCategory}
-            className="rounded-2xl border border-black/8 bg-[#f7f8f4] px-4 py-3 text-sm text-ink"
+            className="rounded-full border border-border bg-white px-4 py-3 text-sm text-ink md:py-2.5"
           >
             {categoryOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -56,7 +56,7 @@ export function TopBarFilters({
           <select
             name="timeframe"
             defaultValue={selectedTimeframe}
-            className="rounded-2xl border border-black/8 bg-[#f7f8f4] px-4 py-3 text-sm text-ink"
+            className="rounded-full border border-border bg-white px-4 py-3 text-sm text-ink md:py-2.5"
           >
             {timeframeOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -67,7 +67,7 @@ export function TopBarFilters({
           <select
             name="sort"
             defaultValue={selectedSort ?? "latest"}
-            className="rounded-2xl border border-black/8 bg-[#f7f8f4] px-4 py-3 text-sm text-ink sm:col-span-1 col-span-2"
+            className="col-span-2 rounded-full border border-border bg-white px-4 py-3 text-sm text-ink sm:col-span-1 md:py-2.5"
           >
             {sortOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -78,7 +78,7 @@ export function TopBarFilters({
         </div>
         <button
           type="submit"
-          className="rounded-2xl bg-ink px-5 py-3 text-sm font-semibold text-white transition hover:bg-ink/90"
+          className="rounded-full bg-accent px-5 py-3 text-sm font-medium text-white transition hover:bg-accent-hover md:py-2.5"
         >
           Apply
         </button>

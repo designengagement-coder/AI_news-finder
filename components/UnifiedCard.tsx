@@ -1,6 +1,6 @@
 import { ExternalLink } from "lucide-react";
 import { SourceBadge } from "@/components/SourceBadge";
-import { relativeDate } from "@/lib/utils";
+import { cleanDisplayText, relativeDate } from "@/lib/utils";
 
 type UnifiedCardProps = {
   title: string;
@@ -15,10 +15,10 @@ type UnifiedCardProps = {
 };
 
 const accentStyles = {
-  default: "border-[#dde3d9]",
-  job: "border-[#cad8d0]",
-  tool: "border-[#dddccf]",
-  workflow: "border-[#d7dfd5]"
+  default: "border-border",
+  job: "border-border",
+  tool: "border-border",
+  workflow: "border-border"
 } as const;
 
 export function UnifiedCard({
@@ -32,28 +32,42 @@ export function UnifiedCard({
   tags = [],
   accent = "default"
 }: UnifiedCardProps) {
+  const displaySummary = cleanDisplayText(summary);
+
   return (
-    <article className={`min-w-[84vw] snap-start rounded-[26px] border bg-white p-5 shadow-panel sm:min-w-[360px] lg:min-w-[410px] ${accentStyles[accent]}`}>
+    <article className={`min-w-[84vw] snap-start overflow-hidden rounded-lg border bg-white p-5 shadow-panel transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-hover sm:min-w-[360px] lg:min-w-[410px] ${accentStyles[accent]}`}>
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-3">
           <SourceBadge source={sourceName} label={categoryLabel} />
-          <h3 className="text-lg font-semibold leading-tight text-ink">{title}</h3>
+          <h3 className="text-[1.25rem] font-semibold leading-snug text-ink">{title}</h3>
         </div>
         <a
           href={fullUrl}
           target="_blank"
           rel="noreferrer"
-          className="rounded-full border border-black/8 bg-[#f6f7f3] p-2 text-slate"
+          className="rounded-md border border-border bg-surface p-2 text-muted"
           aria-label={`Open ${title}`}
         >
           <ExternalLink className="h-4 w-4" />
         </a>
       </div>
-      <p className="mt-3 text-sm leading-6 text-slate">{summary}</p>
+      <div className="mt-4 min-h-[168px]">
+        <p
+          className="text-[15px] leading-7 text-slate"
+          style={{
+            display: "-webkit-box",
+            WebkitBoxOrient: "vertical",
+            WebkitLineClamp: 6,
+            overflow: "hidden"
+          }}
+        >
+          {displaySummary}
+        </p>
+      </div>
       {meta.length > 0 ? (
         <div className="mt-4 flex flex-wrap gap-2">
           {meta.slice(0, 3).map((item) => (
-            <span key={item} className="rounded-full bg-[#f4f6f1] px-3 py-1 text-xs font-medium text-slate">
+            <span key={item} className="rounded bg-bg-alt px-2.5 py-1 text-[13px] text-muted">
               {item}
             </span>
           ))}
@@ -61,12 +75,12 @@ export function UnifiedCard({
       ) : null}
       <div className="mt-4 flex flex-wrap items-center gap-2">
         {tags.slice(0, 3).map((tag) => (
-          <span key={tag} className="rounded-full bg-[#eef2eb] px-2.5 py-1 text-xs font-medium text-ink">
+          <span key={tag} className="rounded bg-accent-light px-2.5 py-1 text-[12px] font-semibold uppercase tracking-[0.04em] text-accent-dark">
             {tag}
           </span>
         ))}
         {publishedAt ? (
-          <span className="ml-auto text-[11px] font-semibold uppercase tracking-[0.18em] text-slate">
+          <span className="ml-auto text-[13px] text-muted">
             {relativeDate(publishedAt)}
           </span>
         ) : null}

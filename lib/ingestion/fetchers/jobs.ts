@@ -1,4 +1,5 @@
 import { CONTENT_CATEGORIES, SOURCE_TYPES } from "@/lib/constants";
+import { editorialReviewForDesign } from "@/lib/ingestion/rewrite";
 import { relevantJobTerms, type JobSourceConfig } from "@/lib/ingestion/sources";
 import { extractStructuredSignals, htmlToText, summarize } from "@/lib/ingestion/normalize";
 import { IngestionRecord } from "@/lib/types";
@@ -92,13 +93,29 @@ export async function fetchGreenhouseBoard(config: JobSourceConfig): Promise<Ing
 
   const payload = (await response.json()) as GreenhouseBoardResponse;
 
-  return payload.jobs
-    .filter((job) => matchesRelevantRole(job.title, job.content ?? ""))
-    .slice(0, 20)
-    .map((job) => {
-      const text = summarize(htmlToText(job.content ?? ""));
+  const records: Array<IngestionRecord | null> = await Promise.all(
+    payload.jobs
+      .filter((job) => matchesRelevantRole(job.title, job.content ?? ""))
+      .slice(0, 20)
+      .map(async (job) => {
+      let text = summarize(htmlToText(job.content ?? ""));
       const structured = extractStructuredSignals(job.title, text);
       const metadataText = (job.metadata ?? []).map((entry) => `${entry.name}: ${entry.value}`).join(" | ");
+      const editorialReview = await editorialReviewForDesign({
+        title: job.title,
+        summary: text,
+        sourceName: `${config.company} Careers`,
+        category: CONTENT_CATEGORIES.JOB,
+        tags: ["hiring", "product-design", "ai-talent-market"]
+      });
+
+      if (editorialReview) {
+        if (!editorialReview.keep) {
+          return null;
+        }
+
+        text = summarize(editorialReview.rewrittenSummary);
+      }
 
       return {
         externalId: job.absolute_url,
@@ -126,5 +143,8 @@ export async function fetchGreenhouseBoard(config: JobSourceConfig): Promise<Ing
           metadata: job.metadata ?? []
         }
       };
-    });
+      })
+  );
+
+  return records.filter((record): record is IngestionRecord => record !== null);
 }
