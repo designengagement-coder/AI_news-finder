@@ -5,6 +5,7 @@ export type RssSourceConfig = {
   type: SourceType;
   baseUrl: string;
   feedUrl: string;
+  enabled?: boolean;
   category: ContentCategory;
   subcategory?: string;
   tags: string[];
@@ -15,6 +16,7 @@ export type JobSourceConfig = {
   company: string;
   boardUrl: string;
   type: "greenhouse" | "career-portal";
+  enabled?: boolean;
   locationHint?: string;
   searchUrl?: string;
 };
@@ -34,6 +36,7 @@ export const rssSources: RssSourceConfig[] = [
     type: SOURCE_TYPES.BLOG,
     baseUrl: "https://www.anthropic.com",
     feedUrl: "https://www.anthropic.com/news/rss.xml",
+    enabled: false,
     category: CONTENT_CATEGORIES.NEWS,
     tags: ["labs", "product-updates"],
     region: "USA"
@@ -88,6 +91,7 @@ export const rssSources: RssSourceConfig[] = [
     type: SOURCE_TYPES.BLOG,
     baseUrl: "https://www.figma.com",
     feedUrl: "https://www.figma.com/blog/rss.xml",
+    enabled: false,
     category: CONTENT_CATEGORIES.DESIGN_IMPACT,
     tags: ["product-design", "design-systems"],
     region: "USA"
@@ -97,6 +101,7 @@ export const rssSources: RssSourceConfig[] = [
     type: SOURCE_TYPES.BLOG,
     baseUrl: "https://blog.adobe.com",
     feedUrl: "https://blog.adobe.com/en/topics/design/feed",
+    enabled: false,
     category: CONTENT_CATEGORIES.DESIGN_IMPACT,
     tags: ["adobe", "design-tools", "creative-workflows"],
     region: "USA"
@@ -149,11 +154,11 @@ export const rssSources: RssSourceConfig[] = [
 ];
 
 export const jobSources: JobSourceConfig[] = [
-  { company: "OpenAI", boardUrl: "https://boards.greenhouse.io/openai", type: "greenhouse" },
+  { company: "OpenAI", boardUrl: "https://boards.greenhouse.io/openai", type: "greenhouse", enabled: false },
   { company: "Anthropic", boardUrl: "https://boards.greenhouse.io/anthropic", type: "greenhouse" },
   { company: "Figma", boardUrl: "https://boards.greenhouse.io/figma", type: "greenhouse" },
-  { company: "Miro", boardUrl: "https://boards.greenhouse.io/miro", type: "greenhouse" },
-  { company: "Notion", boardUrl: "https://boards.greenhouse.io/notion", type: "greenhouse" },
+  { company: "Miro", boardUrl: "https://boards.greenhouse.io/miro", type: "greenhouse", enabled: false },
+  { company: "Notion", boardUrl: "https://boards.greenhouse.io/notion", type: "greenhouse", enabled: false },
   {
     company: "Microsoft",
     boardUrl: "https://jobs.careers.microsoft.com/global/en/search",

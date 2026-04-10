@@ -39,13 +39,13 @@ export function TopBarFilters({
           name="q"
           defaultValue={defaultQuery}
           placeholder="Search product design AI signals"
-          className="min-w-0 rounded-full border border-border bg-white px-4 py-3 text-sm text-ink outline-none placeholder:text-muted focus:border-border-strong md:w-[320px] md:flex-none md:py-2.5"
+          className="min-w-0 rounded-full border border-border bg-[rgba(255,255,255,0.72)] px-4 py-3 text-sm text-ink outline-none placeholder:text-muted focus:border-border-strong md:w-[320px] md:flex-none md:py-2.5"
         />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:flex md:w-auto">
           <select
             name="category"
             defaultValue={selectedCategory}
-            className="rounded-full border border-border bg-white px-4 py-3 text-sm text-ink md:py-2.5"
+            className="rounded-full border border-border bg-[rgba(255,255,255,0.72)] px-4 py-3 text-sm text-ink md:py-2.5"
           >
             {categoryOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -56,7 +56,7 @@ export function TopBarFilters({
           <select
             name="timeframe"
             defaultValue={selectedTimeframe}
-            className="rounded-full border border-border bg-white px-4 py-3 text-sm text-ink md:py-2.5"
+            className="rounded-full border border-border bg-[rgba(255,255,255,0.72)] px-4 py-3 text-sm text-ink md:py-2.5"
           >
             {timeframeOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -67,7 +67,7 @@ export function TopBarFilters({
           <select
             name="sort"
             defaultValue={selectedSort ?? "latest"}
-            className="col-span-2 rounded-full border border-border bg-white px-4 py-3 text-sm text-ink sm:col-span-1 md:py-2.5"
+            className="col-span-2 rounded-full border border-border bg-[rgba(255,255,255,0.72)] px-4 py-3 text-sm text-ink sm:col-span-1 md:py-2.5"
           >
             {sortOptions.map((option) => (
               <option key={option.value} value={option.value}>

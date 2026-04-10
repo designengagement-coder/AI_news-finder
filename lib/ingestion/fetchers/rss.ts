@@ -10,6 +10,7 @@ import {
 } from "@/lib/ingestion/normalize";
 import {
   editorialReviewForDesign,
+  enrichToolUseCase,
   isDirectDesignSignal,
   isGenericNoise,
   rewriteForDesignContext,
@@ -92,6 +93,15 @@ export async function fetchRssSource(config: RssSourceConfig): Promise<Ingestion
 
       const structured = extractStructuredSignals(title, summary);
       const scores = scoreRecord(category, title, publishedAt);
+      const toolUseCase =
+        category === CONTENT_CATEGORIES.TOOL
+          ? await enrichToolUseCase({
+              title,
+              summary,
+              sourceName: config.name,
+              tags
+            })
+          : null;
       const mediaCandidate =
         item.enclosure?.url ??
         (Array.isArray((item as { mediaContent?: Array<{ url?: string; $?: { url?: string } }> }).mediaContent)
@@ -121,7 +131,9 @@ export async function fetchRssSource(config: RssSourceConfig): Promise<Ingestion
         trendScore: scores.trendScore,
         metadata: {
           creator: item.creator ?? null,
-          imageUrl: mediaCandidate ?? null
+          imageUrl: mediaCandidate ?? null,
+          designerUseCase: toolUseCase?.designerUseCase ?? null,
+          designerUseCaseRationale: toolUseCase?.rationale ?? null
         }
       };
     })

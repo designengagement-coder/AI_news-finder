@@ -4,19 +4,19 @@
 
 :root {
   color-scheme: light;
-  --color-bg: #f4e5b7;
-  --color-surface: rgba(255, 250, 235, 0.78);
-  --color-bg-alt: #efe0b2;
-  --color-text: #20150d;
-  --color-text-secondary: #5f4d37;
-  --color-text-muted: #7c684d;
-  --color-border: rgba(94, 72, 35, 0.14);
-  --color-border-strong: rgba(94, 72, 35, 0.24);
-  --color-shadow: rgba(63, 43, 15, 0.08);
-  --color-accent: #8c5a12;
-  --color-accent-hover: #72480c;
-  --color-accent-light: #ead4a1;
-  --color-accent-dark: #5f3b09;
+  --color-bg: #f0e7dd;
+  --color-surface: rgba(244, 239, 230, 0.42);
+  --color-bg-alt: rgba(247, 241, 231, 0.72);
+  --color-text: #1f1a15;
+  --color-text-secondary: #4f453a;
+  --color-text-muted: #62564a;
+  --color-border: rgba(74, 56, 34, 0.14);
+  --color-border-strong: rgba(74, 56, 34, 0.22);
+  --color-shadow: rgba(54, 41, 25, 0.07);
+  --color-accent: #805e36;
+  --color-accent-hover: #684a27;
+  --color-accent-light: rgba(214, 193, 155, 0.68);
+  --color-accent-dark: #563b1b;
   --color-breaking: #dc2626;
   --color-success: #16a34a;
   --color-warning: #d97706;
@@ -29,22 +29,22 @@ html {
 body {
   background-color: var(--color-bg);
   background-image:
-    radial-gradient(circle at 20% 20%, rgba(255, 248, 226, 0.7), transparent 28%),
-    radial-gradient(circle at 80% 10%, rgba(221, 188, 111, 0.18), transparent 24%),
-    linear-gradient(180deg, rgba(255, 251, 239, 0.18), rgba(217, 188, 126, 0.12)),
+    radial-gradient(circle at 20% 18%, rgba(255, 251, 244, 0.28), transparent 24%),
+    radial-gradient(circle at 82% 14%, rgba(190, 174, 150, 0.14), transparent 22%),
+    linear-gradient(180deg, rgba(255, 252, 247, 0.16), rgba(176, 160, 136, 0.08)),
     repeating-linear-gradient(
       0deg,
-      rgba(84, 58, 23, 0.025) 0,
-      rgba(84, 58, 23, 0.025) 1px,
+      rgba(71, 54, 31, 0.02) 0,
+      rgba(71, 54, 31, 0.02) 1px,
       transparent 1px,
-      transparent 4px
+      transparent 5px
     ),
     repeating-linear-gradient(
       90deg,
-      rgba(84, 58, 23, 0.018) 0,
-      rgba(84, 58, 23, 0.018) 1px,
+      rgba(71, 54, 31, 0.015) 0,
+      rgba(71, 54, 31, 0.015) 1px,
       transparent 1px,
-      transparent 5px
+      transparent 6px
     );
   color: var(--color-text);
   font-family: var(--font-body), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;

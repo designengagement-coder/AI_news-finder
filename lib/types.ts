@@ -44,6 +44,9 @@ export type DashboardPayload = {
     lastUpdated: string | null;
     sourceCount: number;
     itemCount: number;
+    lastSuccessfulRun: string | null;
+    failedRunsLast24h: number;
+    latestFailureMessage: string | null;
   };
 };
 
@@ -59,6 +62,9 @@ export const EMPTY_DASHBOARD_PAYLOAD: DashboardPayload = {
   refreshStatus: {
     lastUpdated: null,
     sourceCount: 0,
-    itemCount: 0
+    itemCount: 0,
+    lastSuccessfulRun: null,
+    failedRunsLast24h: 0,
+    latestFailureMessage: null
   }
 };

@@ -141,6 +141,8 @@ async function runSourceIngestion(sourceName: string, runner: () => Promise<Inge
 }
 
 export async function ingestAllSources() {
+  const enabledRssSources = rssSources.filter((source) => source.enabled !== false);
+  const enabledJobSources = jobSources.filter((source) => source.enabled !== false);
   const results: Array<{
     source: string;
     ok: boolean;
@@ -150,7 +152,7 @@ export async function ingestAllSources() {
     error?: string;
   }> = [];
 
-  for (const source of rssSources) {
+  for (const source of enabledRssSources) {
     try {
       const result = await runSourceIngestion(source.name, () => fetchRssSource(source));
       results.push({ source: source.name, ok: true, ...result });
@@ -163,7 +165,7 @@ export async function ingestAllSources() {
     }
   }
 
-  for (const source of jobSources) {
+  for (const source of enabledJobSources) {
     if (source.type !== "greenhouse") {
       results.push({
         source: `${source.company} Careers`,

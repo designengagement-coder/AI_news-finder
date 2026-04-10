@@ -69,6 +69,11 @@ type RewriteResult = {
   rationale: string;
 };
 
+type ToolUseCaseResult = {
+  designerUseCase: string;
+  rationale: string;
+};
+
 type EditorialDecision = {
   keep: boolean;
   isDirectDesignSignal: boolean;
@@ -234,6 +239,78 @@ export async function editorialReviewForDesign(input: {
       rewrittenSummary: parsed.rewrittenSummary || input.summary,
       rewrittenTags: Array.isArray(parsed.rewrittenTags) ? parsed.rewrittenTags : [],
       rationale: parsed.rationale || "Editorial AI review applied."
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function enrichToolUseCase(input: {
+  title: string;
+  summary: string;
+  sourceName: string;
+  tags: string[];
+}): Promise<ToolUseCaseResult | null> {
+  const apiKey = process.env.OPENAI_API_KEY;
+
+  if (!apiKey) {
+    return null;
+  }
+
+  const model = process.env.OPENAI_REWRITE_MODEL || "gpt-5";
+  const prompt = [
+    "You are enriching an AI tools feed for product design teams.",
+    "Write one specific design-use-case statement for the tool.",
+    "Avoid generic phrases like faster ideation unless they are directly justified by the tool context.",
+    "Focus on what a product designer, UX designer, researcher, prototyper, content designer, or design systems lead could actually do with it.",
+    "Keep the response under 150 characters.",
+    "Return strict JSON with keys: designerUseCase, rationale."
+  ].join(" ");
+
+  const response = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model,
+      instructions: prompt,
+      input: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "input_text",
+              text: JSON.stringify(input)
+            }
+          ]
+        }
+      ],
+      max_output_tokens: 140
+    })
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const payload = await response.json();
+  const text = extractResponseText(payload);
+
+  if (!text) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(text) as ToolUseCaseResult;
+    if (!parsed.designerUseCase) {
+      return null;
+    }
+
+    return {
+      designerUseCase: parsed.designerUseCase,
+      rationale: parsed.rationale || "Tool use case enriched."
     };
   } catch {
     return null;

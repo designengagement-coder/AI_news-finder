@@ -40,20 +40,32 @@ function countryPriority(region?: string | null) {
   return region ? 8 : 0;
 }
 
-function designerUseCase(summary: string, tags: string[]) {
-  const corpus = `${summary} ${tags.join(" ")}`.toLowerCase();
+function designerUseCase(title: string, summary: string, tags: string[]) {
+  const corpus = `${title} ${summary} ${tags.join(" ")}`.toLowerCase();
 
   if (corpus.includes("research")) {
     return "Useful for research synthesis and insight clustering.";
   }
+  if (corpus.includes("agent") || corpus.includes("automation")) {
+    return "Useful for automating repetitive design ops and accelerating production workflows.";
+  }
   if (corpus.includes("prototype") || corpus.includes("build")) {
     return "Useful for quick prototyping and concept exploration.";
+  }
+  if (corpus.includes("voice") || corpus.includes("audio")) {
+    return "Useful for voice-interface concepts, multimodal flows, and conversational experience design.";
   }
   if (corpus.includes("writing") || corpus.includes("copy")) {
     return "Useful for UX writing and interface content iteration.";
   }
   if (corpus.includes("system") || corpus.includes("design-systems")) {
     return "Useful for design-system documentation and component thinking.";
+  }
+  if (corpus.includes("video") || corpus.includes("image") || corpus.includes("visual")) {
+    return "Useful for rapid visual concepting, campaign mockups, and early creative direction.";
+  }
+  if (corpus.includes("evaluation") || corpus.includes("safety") || corpus.includes("trust")) {
+    return "Useful for trust, safety, and evaluation flows in AI product experiences.";
   }
 
   return "Useful for faster ideation, iteration, and design workflow support.";
@@ -107,15 +119,29 @@ function andWhere(
 
 export async function getDashboardData(filters: FilterState = {}) {
   const where = buildWhere(filters);
-  const [focusedPool, toolsRaw, workflowsRaw, jobsRaw, designImpactRaw, marketSignalsRaw, sourceCount, itemCount, lastItem] =
+  const [
+    focusedPool,
+    toolsRaw,
+    workflowsRaw,
+    jobsRaw,
+    designImpactRaw,
+    marketSignalsRaw,
+    sourceCount,
+    itemCount,
+    lastItem,
+    lastSuccessfulRun,
+    failedRunsLast24h,
+    latestFailure
+  ] =
     await Promise.all([
       prisma.contentItem.findMany({
         where: andWhere(where, {
           OR: [
-            { category: CONTENT_CATEGORIES.JOB },
+            { category: CONTENT_CATEGORIES.NEWS },
             { category: CONTENT_CATEGORIES.TOOL },
             { category: CONTENT_CATEGORIES.WORKFLOW },
-            { category: CONTENT_CATEGORIES.DESIGN_IMPACT }
+            { category: CONTENT_CATEGORIES.DESIGN_IMPACT },
+            { category: CONTENT_CATEGORIES.MARKET_SIGNAL }
           ]
         }),
         orderBy: orderBy(filters.sort),
@@ -154,7 +180,21 @@ export async function getDashboardData(filters: FilterState = {}) {
       }),
       prisma.source.count({ where: { active: true } }),
       prisma.contentItem.count({ where }),
-      prisma.contentItem.findFirst({ orderBy: [{ fetchedAt: "desc" }] })
+      prisma.contentItem.findFirst({ orderBy: [{ fetchedAt: "desc" }] }),
+      prisma.ingestionRun.findFirst({
+        where: { status: "success", finishedAt: { not: null } },
+        orderBy: { finishedAt: "desc" }
+      }),
+      prisma.ingestionRun.count({
+        where: {
+          status: "failed",
+          startedAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+        }
+      }),
+      prisma.ingestionRun.findFirst({
+        where: { status: "failed" },
+        orderBy: { finishedAt: "desc" }
+      })
     ]);
 
   const normalizeItem = (item: (typeof focusedPool)[number]) => ({
@@ -165,13 +205,17 @@ export async function getDashboardData(filters: FilterState = {}) {
     extractedCompanies: asStringArray(item.extractedCompanies),
     metadata: asRecord(item.metadata),
     toolLogoUrl: asRecord(item.metadata)?.imageUrl as string | undefined,
-    designerUseCase: designerUseCase(item.summary, asStringArray(item.tags))
+    designerUseCase:
+      (asRecord(item.metadata)?.designerUseCase as string | undefined) ??
+      designerUseCase(item.title, item.summary, asStringArray(item.tags))
   });
 
   const isDesignFocused = (item: ReturnType<typeof normalizeItem>) => {
     const corpus = `${item.title} ${item.summary} ${item.tags.join(" ")}`.toLowerCase();
     return (
       item.category === CONTENT_CATEGORIES.JOB ||
+      item.category === CONTENT_CATEGORIES.NEWS ||
+      item.category === CONTENT_CATEGORIES.MARKET_SIGNAL ||
       item.category === CONTENT_CATEGORIES.DESIGN_IMPACT ||
       item.category === CONTENT_CATEGORIES.WORKFLOW ||
       item.category === CONTENT_CATEGORIES.TOOL ||
@@ -179,17 +223,25 @@ export async function getDashboardData(filters: FilterState = {}) {
     );
   };
 
+  const isPriorityReadingSignal = (item: ReturnType<typeof normalizeItem>) =>
+    item.category !== CONTENT_CATEGORIES.JOB &&
+    item.category !== CONTENT_CATEGORIES.TOOL &&
+    item.contentType !== "job" &&
+    Boolean(item.fullUrl);
+
   const rankPriority = (item: ReturnType<typeof normalizeItem>) => {
     const categoryWeight =
-      item.category === CONTENT_CATEGORIES.JOB
-        ? 160
-        : item.category === CONTENT_CATEGORIES.DESIGN_IMPACT
+      item.category === CONTENT_CATEGORIES.DESIGN_IMPACT
+        ? 150
+        : item.category === CONTENT_CATEGORIES.NEWS
           ? 125
-          : item.category === CONTENT_CATEGORIES.TOOL
-            ? 95
-            : item.category === CONTENT_CATEGORIES.WORKFLOW
-              ? 85
-              : 40;
+          : item.category === CONTENT_CATEGORIES.WORKFLOW
+            ? 110
+            : item.category === CONTENT_CATEGORIES.MARKET_SIGNAL
+              ? 95
+              : item.category === CONTENT_CATEGORIES.TOOL
+                ? 70
+                : 20;
 
     const keywordLift = designKeywords.reduce(
       (score, keyword) =>
@@ -212,8 +264,8 @@ export async function getDashboardData(filters: FilterState = {}) {
     .filter(isDesignFocused)
     .sort((a, b) => rankPriority(b) - rankPriority(a));
 
-  const priorityNews = [...jobs, ...designImpact]
-    .filter(isDesignFocused)
+  const priorityNews = [...focusedItems, ...designImpact, ...workflows, ...marketSignals]
+    .filter((item) => isDesignFocused(item) && isPriorityReadingSignal(item))
     .sort((a, b) => rankPriority(b) - rankPriority(a))
     .slice(0, 10);
 
@@ -252,7 +304,10 @@ export async function getDashboardData(filters: FilterState = {}) {
     refreshStatus: {
       lastUpdated: lastItem?.fetchedAt.toISOString() ?? null,
       sourceCount,
-      itemCount
+      itemCount,
+      lastSuccessfulRun: lastSuccessfulRun?.finishedAt?.toISOString() ?? null,
+      failedRunsLast24h,
+      latestFailureMessage: latestFailure?.message ?? null
     }
   };
 }

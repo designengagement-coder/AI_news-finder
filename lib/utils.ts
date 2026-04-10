@@ -28,6 +28,9 @@ export function cleanDisplayText(text?: string | null) {
 
   return text
     .replace(/<[^>]*>/g, " ")
+    .replace(/\*\*/g, "")
+    .replace(/__/g, "")
+    .replace(/\[(.*?)\]\((.*?)\)/g, "$1")
     .replace(/&nbsp;/gi, " ")
     .replace(/&amp;/gi, "&")
     .replace(/&quot;/gi, '"')

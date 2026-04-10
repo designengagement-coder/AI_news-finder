@@ -49,10 +49,10 @@ export default async function Home({ searchParams }: PageProps) {
   const dashboard = await getDashboardData(filters).catch(() => EMPTY_DASHBOARD_PAYLOAD);
 
   return (
-    <main className="min-h-screen px-5 py-6 md:px-10 lg:px-20">
+    <main className="min-h-screen px-5 pb-6 pt-6 md:px-10 lg:px-20">
       <div className="mx-auto w-full max-w-[1440px]">
         <section className="pb-3">
-          <div className="flex min-h-16 flex-col gap-3 rounded-xl bg-surface px-4 py-3 shadow-panel md:flex-row md:items-center md:justify-between md:gap-4 md:px-5 md:py-0">
+          <div className="mx-auto flex min-h-16 w-full max-w-[1440px] flex-col gap-3 rounded-xl bg-surface px-4 py-3 md:flex-row md:items-center md:justify-between md:gap-4 md:px-5 md:py-0">
             <div className="shrink-0">
               <h1 className="font-serif text-[1.45rem] leading-none tracking-[-0.03em] text-ink md:text-[1.6rem]">
                 Signal Desk
@@ -74,7 +74,6 @@ export default async function Home({ searchParams }: PageProps) {
         <SectionCarousel
           eyebrow="Priority News"
           title="AI product and design signals first"
-          viewMoreHref="/?category=DESIGN_IMPACT"
         >
           {renderCollection(
             dashboard.priorityNews as any[],
@@ -87,7 +86,6 @@ export default async function Home({ searchParams }: PageProps) {
         <SectionCarousel
           eyebrow="AI Tools"
           title="Tools that matter to product teams"
-          viewMoreHref="/?category=TOOL"
         >
           {renderCollection(
             dashboard.tools as any[],
@@ -100,7 +98,6 @@ export default async function Home({ searchParams }: PageProps) {
         <SectionCarousel
           eyebrow="AI Workflows"
           title="Adoption patterns teams can practice"
-          viewMoreHref="/?category=WORKFLOW"
         >
           {renderCollection(
             dashboard.workflows as any[],
@@ -113,7 +110,6 @@ export default async function Home({ searchParams }: PageProps) {
         <SectionCarousel
           eyebrow="Design Impact"
           title="How AI is changing product design roles"
-          viewMoreHref="/?category=DESIGN_IMPACT"
         >
           {renderCollection(
             dashboard.designImpact as any[],
@@ -126,7 +122,6 @@ export default async function Home({ searchParams }: PageProps) {
         <SectionCarousel
           eyebrow="Signals to Watch"
           title="Cross-signal patterns worth watching"
-          viewMoreHref="/?sort=relevance"
         >
           {renderCollection(
             dashboard.marketSignals as any[],
@@ -139,7 +134,6 @@ export default async function Home({ searchParams }: PageProps) {
         <SectionCarousel
           eyebrow="New AI Tools"
           title="Recently launched tools to evaluate"
-          viewMoreHref="/?category=TOOL&sort=latest"
         >
           {renderCollection(
             ((dashboard.launchedTools as any[])?.length ? dashboard.launchedTools : dashboard.tools) as any[],
@@ -152,7 +146,6 @@ export default async function Home({ searchParams }: PageProps) {
         <SectionCarousel
           eyebrow="AI Jobs"
           title="Design roles in the AI market"
-          viewMoreHref="/?category=JOB"
         >
           {renderCollection(
             dashboard.jobs as any[],

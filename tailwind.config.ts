@@ -5,24 +5,24 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: "#20150D",
-        surface: "rgba(255,250,235,0.78)",
-        "bg-alt": "#EFE0B2",
-        slate: "#5F4D37",
-        muted: "#7C684D",
-        border: "rgba(94,72,35,0.14)",
-        "border-strong": "rgba(94,72,35,0.24)",
-        accent: "#8C5A12",
-        "accent-hover": "#72480C",
-        "accent-light": "#EAD4A1",
-        "accent-dark": "#5F3B09",
+        ink: "#1F1A15",
+        surface: "rgba(244,239,230,0.42)",
+        "bg-alt": "rgba(247,241,231,0.72)",
+        slate: "#4F453A",
+        muted: "#62564A",
+        border: "rgba(74,56,34,0.14)",
+        "border-strong": "rgba(74,56,34,0.22)",
+        accent: "#805E36",
+        "accent-hover": "#684A27",
+        "accent-light": "rgba(214,193,155,0.68)",
+        "accent-dark": "#563B1B",
         breaking: "#DC2626",
         success: "#16A34A",
         warning: "#D97706"
       },
       boxShadow: {
-        panel: "0 1px 2px rgba(63,43,15,0.08), 0 10px 24px rgba(63,43,15,0.05)",
-        hover: "0 10px 24px rgba(63,43,15,0.12)"
+        panel: "0 1px 2px rgba(54,41,25,0.06), 0 10px 24px rgba(54,41,25,0.04)",
+        hover: "0 10px 24px rgba(54,41,25,0.08)"
       }
     }
   },
