@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ingestAllSources } from "@/lib/ingestion/pipeline";
 
-export async function POST(request: NextRequest) {
+function isAuthorized(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
-  const expected = process.env.INGESTION_API_KEY;
+  const allowedSecrets = [process.env.INGESTION_API_KEY, process.env.CRON_SECRET].filter(Boolean);
 
-  if (expected && authHeader !== `Bearer ${expected}`) {
+  if (allowedSecrets.length === 0) {
+    return true;
+  }
+
+  return allowedSecrets.some((secret) => authHeader === `Bearer ${secret}`);
+}
+
+async function runRefresh(request: NextRequest) {
+  if (!isAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -18,4 +26,12 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+export async function GET(request: NextRequest) {
+  return runRefresh(request);
+}
+
+export async function POST(request: NextRequest) {
+  return runRefresh(request);
 }

@@ -7,6 +7,7 @@ type RefreshStatusBarProps = {
   lastSuccessfulRun: string | null;
   failedRunsLast24h: number;
   latestFailureMessage: string | null;
+  compact?: boolean;
 };
 
 export function RefreshStatusBar({
@@ -15,10 +16,17 @@ export function RefreshStatusBar({
   itemCount,
   lastSuccessfulRun: _lastSuccessfulRun,
   failedRunsLast24h: _failedRunsLast24h,
-  latestFailureMessage: _latestFailureMessage
+  latestFailureMessage: _latestFailureMessage,
+  compact = false
 }: RefreshStatusBarProps) {
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-1 py-2 text-sm text-ink">
+    <div
+      className={
+        compact
+          ? "flex flex-wrap items-center justify-end gap-x-4 gap-y-1 text-sm text-ink"
+          : "flex flex-wrap items-center gap-x-4 gap-y-2 px-1 py-2 text-sm text-ink"
+      }
+    >
       <span className="font-medium">Refresh status</span>
       <span className="text-muted">Last updated: {relativeDate(lastUpdated)}</span>
       <span className="text-muted">{sourceCount} active sources</span>

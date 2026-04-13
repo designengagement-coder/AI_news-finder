@@ -127,7 +127,13 @@ curl -X POST http://localhost:3000/api/refresh \
 */30 * * * * cd /Users/ankushpanda/Documents/New\ project && npm run refresh >> /tmp/ai-intelligence-refresh.log 2>&1
 ```
 
-Recommended cadence: every 30 to 60 minutes.
+For Vercel production, this repo now includes `vercel.json` with a daily cron schedule:
+
+```text
+30 3 * * *   # 9:00 AM Asia/Kolkata
+```
+
+Set `CRON_SECRET` in Vercel, and Vercel will call `GET /api/refresh` automatically each morning. The refresh route accepts either `CRON_SECRET` or `INGESTION_API_KEY` as a bearer token.
 
 If `ENABLE_AUTO_REFRESH="true"`, the dashboard will also trigger a refresh on page load when the last successful ingestion is older than 30 minutes. For Vercel production, keep this off and use scheduled refresh against the API route or a cron job.
 

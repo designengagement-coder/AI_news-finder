@@ -6,7 +6,6 @@ import { NewsCard } from "@/components/NewsCard";
 import { RefreshStatusBar } from "@/components/RefreshStatusBar";
 import { SectionCarousel } from "@/components/SectionCarousel";
 import { ToolCard } from "@/components/ToolCard";
-import { TopBarFilters } from "@/components/TopBarFilters";
 import { WorkflowCard } from "@/components/WorkflowCard";
 import { maybeAutoRefresh } from "@/lib/ingestion/auto-refresh";
 import { EMPTY_DASHBOARD_PAYLOAD } from "@/lib/types";
@@ -16,10 +15,6 @@ type PageProps = {
 };
 
 export const revalidate = 300;
-
-function single(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] : value;
-}
 
 function renderCollection<T>(
   items: T[],
@@ -36,17 +31,8 @@ function renderCollection<T>(
 
 export default async function Home({ searchParams }: PageProps) {
   await maybeAutoRefresh();
-
-  const params = await searchParams;
-  const filters = {
-    q: single(params.q),
-    category: single(params.category),
-    timeframe: single(params.timeframe),
-    sourceType: single(params.sourceType),
-    sort: (single(params.sort) as "latest" | "trending" | "relevance" | undefined) ?? "latest"
-  };
-
-  const dashboard = await getDashboardData(filters).catch(() => EMPTY_DASHBOARD_PAYLOAD);
+  await searchParams;
+  const dashboard = await getDashboardData({ sort: "latest" }).catch(() => EMPTY_DASHBOARD_PAYLOAD);
 
   return (
     <main className="min-h-screen px-5 pb-6 pt-6 md:px-10 lg:px-20">
@@ -58,18 +44,9 @@ export default async function Home({ searchParams }: PageProps) {
                 Signal Desk
               </h1>
             </div>
-            <TopBarFilters
-              defaultQuery={filters.q}
-              selectedCategory={filters.category}
-              selectedTimeframe={filters.timeframe}
-              selectedSort={filters.sort}
-            />
+            <RefreshStatusBar {...dashboard.refreshStatus} compact />
           </div>
         </section>
-
-        <div className="mt-4">
-          <RefreshStatusBar {...dashboard.refreshStatus} />
-        </div>
 
         <SectionCarousel
           eyebrow="Priority News"
