@@ -31,6 +31,29 @@ export type FilterState = {
   sort?: "latest" | "trending" | "relevance";
 };
 
+export type DailyDigestItem = {
+  id: string;
+  title: string;
+  summary: string;
+  url: string;
+  sourceName: string;
+  publishedAt: string | null;
+  tags: string[];
+};
+
+export type DailyDigestPayload = {
+  generatedAt: string;
+  date: string;
+  lastUpdated: string | null;
+  sections: {
+    aiNews: DailyDigestItem[];
+    aiTools: DailyDigestItem[];
+    aiWorkflows: DailyDigestItem[];
+    aiJobs: DailyDigestItem[];
+  };
+  slackText: string;
+};
+
 export type DashboardPayload = {
   priorityNews: unknown[];
   tools: unknown[];

@@ -2,8 +2,8 @@ import { Prisma } from "@prisma/client";
 import { CONTENT_CATEGORIES } from "@/lib/constants";
 import { prisma } from "@/lib/db";
 import { asRecord, asStringArray } from "@/lib/serializers";
-import { FilterState } from "@/lib/types";
-import { timeframeStart } from "@/lib/utils";
+import { DailyDigestPayload, FilterState } from "@/lib/types";
+import { cleanDisplayText, timeframeStart } from "@/lib/utils";
 
 const designKeywords = [
   "design",
@@ -115,6 +115,104 @@ function andWhere(
   }
 
   return { AND: filtered };
+}
+
+function toDigestItem(item: {
+  id: string;
+  title: string;
+  summary: string;
+  fullUrl: string;
+  sourceName: string;
+  publishedAt: Date | null;
+  tags: unknown;
+}) {
+  return {
+    id: item.id,
+    title: cleanDisplayText(item.title),
+    summary: cleanDisplayText(item.summary),
+    url: item.fullUrl,
+    sourceName: item.sourceName,
+    publishedAt: item.publishedAt?.toISOString() ?? null,
+    tags: asStringArray(item.tags).slice(0, 4)
+  };
+}
+
+function buildSlackSection(label: string, items: ReturnType<typeof toDigestItem>[]) {
+  if (items.length === 0) {
+    return `*${label}*\n- No updates today`;
+  }
+
+  return [
+    `*${label}*`,
+    ...items.map((item) => `- <${item.url}|${item.title}> — ${item.sourceName}`)
+  ].join("\n");
+}
+
+export async function getDailyDigest(limit = 5): Promise<DailyDigestPayload> {
+  const safeLimit = Math.min(Math.max(limit, 1), 10);
+  const now = new Date();
+  const startOfDay = new Date(now);
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const baseWhere: Prisma.ContentItemWhereInput = {
+    OR: [{ publishedAt: { gte: startOfDay } }, { fetchedAt: { gte: startOfDay } }]
+  };
+
+  const [aiNewsRaw, aiToolsRaw, aiWorkflowsRaw, aiJobsRaw, lastItem] = await Promise.all([
+    prisma.contentItem.findMany({
+      where: andWhere(baseWhere, {
+        OR: [
+          { category: CONTENT_CATEGORIES.NEWS },
+          { category: CONTENT_CATEGORIES.DESIGN_IMPACT },
+          { category: CONTENT_CATEGORIES.MARKET_SIGNAL }
+        ]
+      }),
+      orderBy: [{ publishedAt: "desc" }, { fetchedAt: "desc" }],
+      take: safeLimit
+    }),
+    prisma.contentItem.findMany({
+      where: andWhere(baseWhere, { category: CONTENT_CATEGORIES.TOOL }),
+      orderBy: [{ publishedAt: "desc" }, { fetchedAt: "desc" }],
+      take: safeLimit
+    }),
+    prisma.contentItem.findMany({
+      where: andWhere(baseWhere, { category: CONTENT_CATEGORIES.WORKFLOW }),
+      orderBy: [{ publishedAt: "desc" }, { fetchedAt: "desc" }],
+      take: safeLimit
+    }),
+    prisma.contentItem.findMany({
+      where: andWhere(baseWhere, { category: CONTENT_CATEGORIES.JOB }),
+      orderBy: [{ publishedAt: "desc" }, { fetchedAt: "desc" }],
+      take: safeLimit
+    }),
+    prisma.contentItem.findFirst({ orderBy: [{ fetchedAt: "desc" }] })
+  ]);
+
+  const sections = {
+    aiNews: aiNewsRaw.map(toDigestItem),
+    aiTools: aiToolsRaw.map(toDigestItem),
+    aiWorkflows: aiWorkflowsRaw.map(toDigestItem),
+    aiJobs: aiJobsRaw.map(toDigestItem)
+  };
+
+  return {
+    generatedAt: now.toISOString(),
+    date: startOfDay.toISOString().slice(0, 10),
+    lastUpdated: lastItem?.fetchedAt.toISOString() ?? null,
+    sections,
+    slackText: [
+      `*AI Trends Daily Digest*`,
+      `_Updated: ${lastItem?.fetchedAt ? lastItem.fetchedAt.toISOString() : "unknown"}_`,
+      "",
+      buildSlackSection("AI News", sections.aiNews),
+      "",
+      buildSlackSection("AI Tools", sections.aiTools),
+      "",
+      buildSlackSection("AI Workflows", sections.aiWorkflows),
+      "",
+      buildSlackSection("AI Jobs", sections.aiJobs)
+    ].join("\n")
+  };
 }
 
 export async function getDashboardData(filters: FilterState = {}) {
